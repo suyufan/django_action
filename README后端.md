@@ -87,3 +87,29 @@
             return new_object
     ```
 
+### 2.API请求
+
+`http://localhost/api/comment/?root=12`
+
+api/urls.py中
+
+`url(r'^comment/$',news.CommentView.as_view())` 
+
+news.py中
+
+```python
+class CommentModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.CommentRecord
+        fields = "__all__"
+        
+class CommentView(APIView):
+    def get(self,request,*args,**kwargs):
+        root_id = request.query_params.get('root')
+        # 1.获取这个根评论的所有子评论
+        node_queryset = models.CommentRecord.objects.filter(root_id=root_id).order_by('id')
+        # 2.序列化
+        ser = CommentModelSerializer(instance=node_queryset,many=True)
+        return Response(ser.data,status=200)
+```
+
